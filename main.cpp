@@ -1,3 +1,9 @@
+//Universidad del Valle de Guatemala 
+//Electrónica Digital 2 - BE3029
+//Julio Pérez 221023
+//Proyecto 1
+
+//Librerías utilizadas en el circuito.
 #include <Arduino.h>
 #include "driver/ledc.h"
 #include "config.h"
