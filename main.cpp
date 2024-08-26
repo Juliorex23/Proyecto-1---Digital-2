@@ -70,72 +70,37 @@ void initPWMServo(void) {
     ledcAttachPin(pinServo, canalPWM_Servo);
     ledcWrite(canalPWM_Servo, PWM_min);
 }
+// Funciones de display
+void mostrador() {
+    int parte_entera = int(temperature);
+    int decimal = int((temperature - parte_entera) * 10 + 0.5);
+    int decena = (parte_entera / 10);
+    int unidad = (parte_entera % 10);
 
-void setup() {
-    Serial.begin(115200);
-    while (!Serial);
-    Serial.print("Connecting to Adafruit IO");
-    io.connect();
-    while (io.status() < AIO_CONNECTED) {
-        Serial.print(".");
-        delay(500);
-    }
-    Serial.println();
-    Serial.println(io.statusText());
-    pinMode (DIS1, OUTPUT);
-    pinMode (DIS2, OUTPUT);
-    pinMode (DIS3, OUTPUT);
-    pinMode (lm35Pin, INPUT);
-    pinMode (LEDR, OUTPUT);
-    pinMode (LEDA, OUTPUT);
-    pinMode (LEDV, OUTPUT);
-    initPWMLEDs();
-    button();
-    initPWMServo();
-}
-void loop() {
-}
+    desplegarDisplay(decena);
+    desplegarPunto(0);
+    digitalWrite(DIS1, HIGH);
+    delay(1);
+    digitalWrite(DIS1, LOW);
 
-void setServoPosition(void) {
-    int pwmValue;
-    if (estadopas == 1){
-        pwmValue = 111;
-    } else if (estadopas == 2) {
-        pwmValue = 77;
-    } else if (estadopas == 3){
-        pwmValue = 43;
-    } else {
-        pwmValue = 26;
-    }
-    ledcWrite(canalPWM_Servo, pwmValue);
-    Serial.print("\n");
-    Serial.print(pwmValue);
+    desplegarDisplay(unidad);
+    desplegarPunto(1);
+    digitalWrite(DIS2, HIGH);
+    delay(1);
+    digitalWrite(DIS2, LOW);
+
+    desplegarDisplay(decimal);
+    desplegarPunto(0);
+    digitalWrite(DIS3, HIGH);
+    delay(1);
+    digitalWrite(DIS3, LOW);  
 }
 
-void controlLEDs(void) {
-    switch (currentfunction) {
-        case 0:
-            ledcWrite(canalPWM_R, PWM_minLed);
-            ledcWrite(canalPWM_A, PWM_minLed);
-            ledcWrite(canalPWM_V, PWM_maxLed);
-            break;
-        case 1:
-            ledcWrite(canalPWM_V, PWM_maxLed);
-            ledcWrite(canalPWM_R, PWM_minLed);
-            ledcWrite(canalPWM_A, PWM_minLed);
-            break;
-        case 2:
-            ledcWrite(canalPWM_R, PWM_minLed);
-            ledcWrite(canalPWM_V, PWM_minLed);
-            ledcWrite(canalPWM_A, PWM_maxLed);
-            break;
-        case 3:
-            ledcWrite(canalPWM_R, PWM_maxLed);
-            ledcWrite(canalPWM_V, PWM_minLed);
-            ledcWrite(canalPWM_A, PWM_minLed);
-            break;
-        default:
-            break;
+void temporizacion() {
+    int contret = 1000;
+    while (contret > 0) {
+        mostrador();
+        contret--;
     }
 }
 
@@ -163,5 +128,29 @@ void setup() {
 }
 
 void loop() {
-    // Implementación para controlar LEDs y servo motor
+    temporizacion();
+    if (enviar) {
+        enviar = false;
+        temperature = analogRead(lm35Pin);
+        float milivolt = temperature * (ADC_VREF_mV / ADC_RESOLUCION);
+        temperature = milivolt / 10;
+
+        Serial.print("Temperatura: ");
+        Serial.print(temperature);
+        Serial.println(" °C");
+
+        if (temperature < 37.0) {
+            currentfunction = 1;
+            estadopas = 1;
+        } else if (temperature >= 37.0 && temperature <= 37.5) {
+            currentfunction = 2;
+            estadopas = 2;
+        } else {
+            currentfunction = 3;
+            estadopas = 3;
+        }
+        controlLEDs();
+        Canal1->save(temperature);
+    }
+    setServoPosition();
 }
