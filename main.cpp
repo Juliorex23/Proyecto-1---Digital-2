@@ -95,3 +95,73 @@ void setup() {
 }
 void loop() {
 }
+
+void setServoPosition(void) {
+    int pwmValue;
+    if (estadopas == 1){
+        pwmValue = 111;
+    } else if (estadopas == 2) {
+        pwmValue = 77;
+    } else if (estadopas == 3){
+        pwmValue = 43;
+    } else {
+        pwmValue = 26;
+    }
+    ledcWrite(canalPWM_Servo, pwmValue);
+    Serial.print("\n");
+    Serial.print(pwmValue);
+}
+
+void controlLEDs(void) {
+    switch (currentfunction) {
+        case 0:
+            ledcWrite(canalPWM_R, PWM_minLed);
+            ledcWrite(canalPWM_A, PWM_minLed);
+            ledcWrite(canalPWM_V, PWM_maxLed);
+            break;
+        case 1:
+            ledcWrite(canalPWM_V, PWM_maxLed);
+            ledcWrite(canalPWM_R, PWM_minLed);
+            ledcWrite(canalPWM_A, PWM_minLed);
+            break;
+        case 2:
+            ledcWrite(canalPWM_R, PWM_minLed);
+            ledcWrite(canalPWM_V, PWM_minLed);
+            ledcWrite(canalPWM_A, PWM_maxLed);
+            break;
+        case 3:
+            ledcWrite(canalPWM_R, PWM_maxLed);
+            ledcWrite(canalPWM_V, PWM_minLed);
+            ledcWrite(canalPWM_A, PWM_minLed);
+            break;
+        default:
+            break;
+    }
+}
+
+void setup() {
+    Serial.begin(115200);
+    while (!Serial);
+    Serial.print("Connecting to Adafruit IO");
+    io.connect();
+    while (io.status() < AIO_CONNECTED) {
+        Serial.print(".");
+        delay(500);
+    }
+    Serial.println();
+    Serial.println(io.statusText());
+    pinMode (DIS1, OUTPUT);
+    pinMode (DIS2, OUTPUT);
+    pinMode (DIS3, OUTPUT);
+    pinMode (lm35Pin, INPUT);
+    pinMode (LEDR, OUTPUT);
+    pinMode (LEDA, OUTPUT);
+    pinMode (LEDV, OUTPUT);
+    initPWMLEDs();
+    button();
+    initPWMServo();
+}
+
+void loop() {
+    // Implementación para controlar LEDs y servo motor
+}
